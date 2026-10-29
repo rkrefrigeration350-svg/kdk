@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Website Generator (Client-Side Standalone Engine)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            400: '#818cf8',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        },
+                        darkbg: '#090d16',
+                        darkcard: '#111827',
+                        darkborder: '#1f2937'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1f2937;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #374151;
+        }
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glow-effect {
+            box-shadow: 0 0 30px -5px rgba(99, 102, 241, 0.25);
+        }
+    </style>
+</head>
+<body class="bg-darkbg text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- Header / Navbar -->
+    <header class="border-b border-darkborder bg-darkbg/90 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
+                    <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-none bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">AI Web Builder Ultra</h1>
+                    <span class="text-[10px] text-brand-400 font-mono tracking-wider uppercase">Standalone Browser AI Engine</span>
+                </div>
+            </div>
+
+            <!-- Global Action Controls -->
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <button id="btnCopyCode" onclick="copyGeneratedCode()" class="hidden sm:flex items-center space-x-2 px-3.5 py-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition">
+                    <i class="fa-regular fa-copy"></i>
+                    <span>Copy Code</span>
+                </button>
+                <button id="btnDownload" onclick="downloadHTML()" class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold transition shadow-lg shadow-brand-600/25">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Export Website (.HTML)</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <main class="flex-1 flex flex-col lg:flex-row overflow-hidden max-w-[1920px] w-full mx-auto">
+
+        <!-- Left Sidebar / Prompt Input & History Panel -->
+        <aside class="w-full lg:w-[420px] xl:w-[460px] border-r border-darkborder p-4 sm:p-5 flex flex-col space-y-5 bg-darkbg overflow-y-auto">
+            
+            <!-- Prompt Input Box -->
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <label for="promptInput" class="block text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-2">
+                        <i class="fa-solid fa-terminal text-brand-400"></i>
+                        <span>Enter Any Prompt</span>
+                    </label>
+                    <span class="text-[11px] text-emerald-400 bg-emerald-950/60 border border-emerald-800 px-2 py-0.5 rounded-full font-mono">
+                        <i class="fa-solid fa-bolt"></i> Fast Engine
+                    </span>
+                </div>
+                
+                <div class="relative">
+                    <textarea id="promptInput" rows="4" 
+                        class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl p-3.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition resize-none leading-relaxed"
+                        placeholder="E.g., Design a Class 10 Science formula sheet with formulas, search bar and interactive calculator..."></textarea>
+                </div>
+
+                <!-- Template Chips -->
+                <div>
+                    <span class="text-[11px] text-slate-400 block mb-2 font-medium">Instant Prompt Starters:</span>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button onclick="setPrompt('Bihar Board Class 10 Science formula sheet with search bar, Physics formulas, Chemistry equations, and interactive calculator')" class="text-[11px] bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700/60 transition">🔬 Class 10 Science Sheet</button>
+                        <button onclick="setPrompt('Modern Full Stack Developer dark portfolio with skill bars, interactive project showcase, and working contact form')" class="text-[11px] bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700/60 transition">👨‍💻 Dev Portfolio</button>
+                        <button onclick="setPrompt('Interactive General Science Quiz game with timer, scoring, explanation popup, and high score')" class="text-[11px] bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700/60 transition">🧠 Science Quiz App</button>
+                        <button onclick="setPrompt('E-commerce tech gadget store with search filter, shopping cart drawer, and order summary')" class="text-[11px] bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700/60 transition">🛍️ Tech Store</button>
+                        <button onclick="setPrompt('Scientific and EMI Calculator with clean dark mode and calculation history log')" class="text-[11px] bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700/60 transition">🧮 EMI & Scientific Calc</button>
+                        <button onclick="setPrompt('Task Todo board with status filters, local storage persistence, and drag style tags')" class="text-[11px] bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700/60 transition">✅ Todo App</button>
+                    </div>
+                </div>
+
+                <!-- Generate Action Button -->
+                <button id="btnGenerate" onclick="generateWebsite()" class="w-full py-3 px-4 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-brand-500/20 flex items-center justify-center space-x-2 transition transform active:scale-[0.99]">
+                    <i class="fa-solid fa-sparkles"></i>
+                    <span>Generate Complete Website</span>
+                </button>
+            </div>
+
+            <hr class="border-darkborder">
+
+            <!-- Prompt History List -->
+            <div class="space-y-2">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                    <span>Generated History</span>
+                    <i class="fa-solid fa-clock-rotate-left text-slate-500"></i>
+                </h3>
+                <div id="historyList" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                    <p class="text-xs text-slate-500 italic">No previous prompts yet.</p>
+                </div>
+            </div>
+
+            <!-- Engine Controls & Styling Modifiers -->
+            <div class="space-y-3 pt-2">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                    <span>Aesthetic Modifiers</span>
+                    <i class="fa-solid fa-sliders text-slate-500"></i>
+                </h3>
+
+                <!-- Accent Color Theme -->
+                <div>
+                    <label class="text-[11px] text-slate-400 block mb-1.5">Color Palette</label>
+                    <div class="grid grid-cols-5 gap-1.5">
+                        <button onclick="setThemeColor('indigo')" class="h-7 rounded-lg bg-indigo-600 text-xs font-medium hover:ring-2 ring-white">Indigo</button>
+                        <button onclick="setThemeColor('emerald')" class="h-7 rounded-lg bg-emerald-600 text-xs font-medium hover:ring-2 ring-white">Emerald</button>
+                        <button onclick="setThemeColor('rose')" class="h-7 rounded-lg bg-rose-600 text-xs font-medium hover:ring-2 ring-white">Rose</button>
+                        <button onclick="setThemeColor('amber')" class="h-7 rounded-lg bg-amber-600 text-xs font-medium hover:ring-2 ring-white">Amber</button>
+                        <button onclick="setThemeColor('cyan')" class="h-7 rounded-lg bg-cyan-600 text-xs font-medium hover:ring-2 ring-white">Cyan</button>
+                    </div>
+                </div>
+
+                <!-- Theme Mode Select -->
+                <div>
+                    <label class="text-[11px] text-slate-400 block mb-1">Aesthetic Base</label>
+                    <select id="selectBaseTheme" onchange="regenerateWithConfig()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
+                        <option value="dark">Dark Modern Glassmorphism</option>
+                        <option value="light">Clean Light & Minimal</option>
+                        <option value="cyberpunk">Cyberpunk Neon Night</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Status Footer -->
+            <div class="mt-auto pt-3 border-t border-darkborder">
+                <div class="bg-slate-900/90 rounded-xl p-2.5 border border-slate-800 flex items-center justify-between text-xs">
+                    <div class="flex items-center space-x-2">
+                        <span class="relative flex h-2 w-2">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <span id="engineStatus" class="text-slate-300 text-[11px] font-mono">Engine Ready</span>
+                    </div>
+                    <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">Client Side</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Right Workspace Viewport -->
+        <section class="flex-1 flex flex-col bg-slate-950 overflow-hidden min-h-[500px]">
+            
+            <!-- Controls Bar -->
+            <div class="bg-darkbg border-b border-darkborder px-4 py-2 flex flex-wrap items-center justify-between gap-3">
+                
+                <!-- Left Tabs -->
+                <div class="flex items-center space-x-1 bg-slate-900 p-1 rounded-lg border border-slate-800">
+                    <button id="tabPreviewBtn" onclick="switchTab('preview')" class="px-3.5 py-1 rounded-md text-xs font-semibold bg-brand-600 text-white transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-eye text-[11px]"></i>
+                        <span>Live Preview</span>
+                    </button>
+                    <button id="tabCodeBtn" onclick="switchTab('code')" class="px-3.5 py-1 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-code text-[11px]"></i>
+                        <span>Source Code</span>
+                    </button>
+                </div>
+
+                <!-- Device Simulator Viewports -->
+                <div id="viewportControls" class="flex items-center space-x-1 bg-slate-900 p-1 rounded-lg border border-slate-800">
+                    <button onclick="setViewport('desktop')" id="vpDesktop" title="Desktop View" class="px-2.5 py-1 rounded text-xs text-brand-400 bg-slate-800">
+                        <i class="fa-solid fa-desktop"></i>
+                    </button>
+                    <button onclick="setViewport('tablet')" id="vpTablet" title="Tablet View" class="px-2.5 py-1 rounded text-xs text-slate-400 hover:text-slate-200">
+                        <i class="fa-solid fa-tablet-screen-button"></i>
+                    </button>
+                    <button onclick="setViewport('mobile')" id="vpMobile" title="Mobile View" class="px-2.5 py-1 rounded text-xs text-slate-400 hover:text-slate-200">
+                        <i class="fa-solid fa-mobile-screen-button"></i>
+                    </button>
+                </div>
+
+                <!-- Info -->
+                <div class="text-xs text-slate-500 hidden sm:block font-mono">
+                    <span id="codeLength">0 KB</span> | HTML Output
+                </div>
+            </div>
+
+            <!-- Tab 1: Live Web Preview -->
+            <div id="tabPreview" class="flex-1 bg-slate-950 p-2 sm:p-4 flex justify-center items-center overflow-auto relative">
+                <div id="iframeContainer" class="w-full h-full max-w-full transition-all duration-300 rounded-xl overflow-hidden shadow-2xl border border-slate-800 bg-white">
+                    <iframe id="previewIframe" class="w-full h-full border-0 rounded-xl" title="Website Live Preview" sandbox="allow-scripts allow-modals allow-forms"></iframe>
+                </div>
+            </div>
+
+            <!-- Tab 2: Code Editor View -->
+            <div id="tabCode" class="flex-1 bg-slate-950 p-4 hidden overflow-hidden flex-col">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-mono text-slate-400">index.html</span>
+                    <button onclick="copyGeneratedCode()" class="text-xs text-brand-400 hover:underline flex items-center space-x-1">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>Copy Code</span>
+                    </button>
+                </div>
+                <div class="flex-1 bg-slate-900 rounded-xl border border-slate-800 overflow-hidden relative">
+                    <textarea id="codeViewTextarea" readonly class="w-full h-full bg-slate-900 text-slate-200 font-mono text-xs p-4 focus:outline-none resize-none leading-relaxed select-all"></textarea>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-slate-100 border border-slate-700 px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 transition-all duration-300 transform translate-y-20 opacity-0 z-50 pointer-events-none">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <span id="toastMessage" class="text-xs font-medium">Action completed successfully!</span>
+    </div>
+
+    <!-- CLIENT ENGINE & ADVANCED PARSER JavaScript -->
+    <script>
+        let currentGeneratedHTML = "";
+        let currentThemeColor = 'indigo';
+        let promptHistory = [];
+
+        const colorMap = {
+            indigo: { primary: '#6366f1', hover: '#4f46e5', light: '#eef2ff', text: 'text-indigo-600', bg: 'bg-indigo-600' },
+            emerald: { primary: '#10b981', hover: '#059669', light: '#ecfdf5', text: 'text-emerald-600', bg: 'bg-emerald-600' },
+            rose: { primary: '#f43f5e', hover: '#e11d48', light: '#fff1f2', text: 'text-rose-600', bg: 'bg-rose-600' },
+            amber: { primary: '#f59e0b', hover: '#d97706', light: '#fffbeb', text: 'text-amber-600', bg: 'bg-amber-600' },
+            cyan: { primary: '#06b6d4', hover: '#0891b2', light: '#ecfeff', text: 'text-cyan-600', bg: 'bg-cyan-600' }
+        };
+
+        window.onload = function() {
+            setPrompt("Bihar Board Class 10 Science formula sheet with search bar, Physics formulas, Chemistry equations, and interactive calculator");
+            generateWebsite();
+        };
+
+        function setPrompt(text) {
+            document.getElementById('promptInput').value = text;
+        }
+
+        function setThemeColor(color) {
+            currentThemeColor = color;
+            showToast("Palette updated to " + color, "fa-palette");
+            regenerateWithConfig();
+        }
+
+        function switchTab(tab) {
+            const previewTab = document.getElementById('tabPreview');
+            const codeTab = document.getElementById('tabCode');
+            const previewBtn = document.getElementById('tabPreviewBtn');
+            const codeBtn = document.getElementById('tabCodeBtn');
+            const vpControls = document.getElementById('viewportControls');
+
+            if (tab === 'preview') {
+                previewTab.classList.remove('hidden');
+                previewTab.classList.add('flex');
+                codeTab.classList.add('hidden');
+                codeTab.classList.remove('flex');
+
+                previewBtn.className = "px-3.5 py-1 rounded-md text-xs font-semibold bg-brand-600 text-white transition flex items-center space-x-1.5";
+                codeBtn.className = "px-3.5 py-1 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition flex items-center space-x-1.5";
+                vpControls.classList.remove('hidden');
+            } else {
+                codeTab.classList.remove('hidden');
+                codeTab.classList.add('flex');
+                previewTab.classList.add('hidden');
+                previewTab.classList.remove('flex');
+
+                codeBtn.className = "px-3.5 py-1 rounded-md text-xs font-semibold bg-brand-600 text-white transition flex items-center space-x-1.5";
+                previewBtn.className = "px-3.5 py-1 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition flex items-center space-x-1.5";
+                vpControls.classList.add('hidden');
+            }
+        }
+
+        function setViewport(device) {
+            const container = document.getElementById('iframeContainer');
+            const btnD = document.getElementById('vpDesktop');
+            const btnT = document.getElementById('vpTablet');
+            const btnM = document.getElementById('vpMobile');
+
+            [btnD, btnT, btnM].forEach(b => {
+                b.className = "px-2.5 py-1 rounded text-xs text-slate-400 hover:text-slate-200";
+            });
+
+            if (device === 'desktop') {
+                container.style.width = '100%';
+                container.style.height = '100%';
+                btnD.className = "px-2.5 py-1 rounded text-xs text-brand-400 bg-slate-800";
+            } else if (device === 'tablet') {
+                container.style.width = '768px';
+                container.style.height = '100%';
+                btnT.className = "px-2.5 py-1 rounded text-xs text-brand-400 bg-slate-800";
+            } else if (device === 'mobile') {
+                container.style.width = '375px';
+                container.style.height = '667px';
+                btnM.className = "px-2.5 py-1 rounded text-xs text-brand-400 bg-slate-800";
+            }
+        }
+
+        function regenerateWithConfig() {
+            generateWebsite();
+        }
+
+        function addToHistory(promptText) {
+            if (!promptHistory.includes(promptText)) {
+                promptHistory.unshift(promptText);
+                if (promptHistory.length > 5) promptHistory.pop();
+                
+                const list = document.getElementById('historyList');
+                list.innerHTML = '';
+                promptHistory.forEach(p => {
+                    const b = document.createElement('button');
+                    b.className = 'w-full text-left truncate text-[11px] bg-slate-900/80 hover:bg-slate-800 text-slate-300 p-2 rounded border border-slate-800 transition';
+                    b.innerHTML = '<i class="fa-solid fa-angle-right text-[9px] text-brand-400 mr-1"></i> ';
+                    b.appendChild(document.createTextNode(p));
+                    b.onclick = () => { setPrompt(p); generateWebsite(); };
+                    list.appendChild(b);
+                });
+            }
+        }
+
+        function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+        const TYPE_KEYWORDS = {
+            quiz: [['quiz',3],['trivia',3],['mcq',3],['test',1],['exam',1],['क्विज',3],['प्रश्नोत्तरी',3],['sawal',2],['सवाल',2]],
+            calculator: [['calculator',3],['calc',3],['emi',3],['loan',2],['kalkulator',3],['कैलकुलेटर',3],['हिसाब',2],['hisab',2]],
+            todo: [['todo',3],['to-do',3],['task',3],['kanban',3],['checklist',3],['planner',2],['kaam',1],['काम',1],['टू-डू',3]],
+            ecommerce: [['store',3],['shop',3],['e-commerce',3],['ecommerce',3],['cart',3],['product',2],['dukaan',3],['dukan',3],['दुकान',3]],
+            portfolio: [['portfolio',3],['resume',3],['cv',2],['developer',1],['biodata',3],['पोर्टफोलियो',3]],
+            science_formula: [['formula',3],['sutra',3],['सूत्र',3],['science',1],['vigyan',2],['विज्ञान',2],['physics',1],['chemistry',1],['class 10',1],['bihar board',1],['sheet',1],['notes',1],['प्रकाश',1],['भौतिक',1],['रसायन',1]]
+        };
+        function hasKw(t, k) {
+            if (/[\u0900-\u097f]/.test(k)) return t.includes(k);
+            const e = k.replace(/[.*+?^${}()|[\]\\-]/g, '\\$&');
+            return new RegExp('(^|[^a-z0-9])' + e + '(s|es)?($|[^a-z0-9])').test(t);
+        }
+        function detectType(text) {
+            const t = text.toLowerCase();
+            let best = 'landing', top = 0;
+            for (const [type, list] of Object.entries(TYPE_KEYWORDS)) {
+                const score = list.reduce((a, [k, w]) => a + (hasKw(t, k) ? w : 0), 0);
+                if (score > top) { top = score; best = type; }
+            }
+            return best;
+        }
+
+        /* ENGINE SYNTHESIZER & GENERATOR logic */
+        function generateWebsite() {
+            const promptText = document.getElementById('promptInput').value.trim() || "Modern responsive landing page";
+            const baseTheme = document.getElementById('selectBaseTheme').value;
+            const btnGen = document.getElementById('btnGenerate');
+
+            btnGen.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> <span>Parsing Prompt & Compiling...</span>`;
+            document.getElementById('engineStatus').innerText = "Compiling Code...";
+
+            setTimeout(() => {
+                addToHistory(promptText);
+                const lowerPrompt = promptText.toLowerCase();
+
+                // Advanced Keyword Category Matching
+                const appType = detectType(promptText);
+
+                currentGeneratedHTML = compileFullHTML(appType, promptText, baseTheme, currentThemeColor);
+
+                const iframe = document.getElementById('previewIframe');
+                iframe.srcdoc = currentGeneratedHTML;
+
+                document.getElementById('codeViewTextarea').value = currentGeneratedHTML;
+
+                const kbSize = (new Blob([currentGeneratedHTML]).size / 1024).toFixed(1);
+                document.getElementById('codeLength').innerText = `${kbSize} KB`;
+
+                btnGen.innerHTML = `<i class="fa-solid fa-sparkles"></i> <span>Generate Complete Website</span>`;
+                document.getElementById('engineStatus').innerText = "Engine Ready";
+                showToast("Website code generated successfully!", "fa-circle-check");
+            }, 350);
+        }
+
+        function compileFullHTML(type, promptText, baseTheme, colorKey) {
+            const base = colorMap[colorKey] || colorMap.indigo;
+            const themeObj = Object.assign({}, base, { text: baseTheme === 'light' ? base.text : base.text.replace('-600', '-400') });
+
+            let bgStyle = "bg-slate-950 text-slate-100";
+            let cardBg = "bg-slate-900/90 border-slate-800";
+            if (baseTheme === 'light') {
+                bgStyle = "bg-slate-50 text-slate-800";
+                cardBg = "bg-white border-slate-200 shadow-sm";
+            } else if (baseTheme === 'cyberpunk') {
+                bgStyle = "bg-black text-pink-400 font-mono";
+                cardBg = "bg-slate-900 border-pink-500/50 shadow-pink-500/20";
+            }
+
+            const themeCss = baseTheme === 'light' ? '.bg-slate-800{background:#e2e8f0!important}.bg-slate-950{background:#f1f5f9!important}.text-slate-400{color:#475569!important}.text-slate-500{color:#64748b!important}.text-slate-300{color:#334155!important}.border-slate-700,.border-slate-800{border-color:#cbd5e1!important}.hover\\:bg-slate-700:hover{background:#cbd5e1!important}.bg-slate-800.text-white{color:#0f172a!important}.text-emerald-400{color:#047857!important}.text-indigo-400{color:#4f46e5!important}input,select{color:#0f172a}' : '';
+
+            const headSection = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generated Web App - ${type.toUpperCase()}</title>
+    <script src="https://cdn.tailwindcss.com"><\/script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Outfit', sans-serif; }
+        ${themeCss}
+        .code-font { font-family: 'Fira Code', monospace; }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>`;
+
+            let bodyContent = '';
+            if (type === 'science_formula') {
+                bodyContent = getScienceFormulaHTML(themeObj, cardBg, promptText);
+            } else if (type === 'portfolio') {
+                bodyContent = getPortfolioHTML(themeObj, cardBg);
+            } else if (type === 'calculator') {
+                bodyContent = getCalculatorHTML(themeObj, cardBg);
+            } else if (type === 'quiz') {
+                bodyContent = getQuizHTML(themeObj, cardBg);
+            } else if (type === 'todo') {
+                bodyContent = getTodoHTML(themeObj, cardBg);
+            } else if (type === 'ecommerce') {
+                bodyContent = getEcommerceHTML(themeObj, cardBg);
+            } else {
+                bodyContent = getSaasLandingHTML(promptText, themeObj, cardBg);
+            }
+
+            const footerHTML = `
+    <footer class="border-t ${cardBg} py-6 mt-12 text-center text-xs opacity-70">
+        <p>Built with Client AI Web Engine | Fully Standalone Single File Website</p>
+    </footer>`;
+
+            return `${headSection}
+<body class="${bgStyle} min-h-screen flex flex-col justify-between">
+    ${bodyContent}
+    ${footerHTML}
+</body>
+</html>`;
+        }
+
+        // --- SCIENCE FORMULA SHEET TEMPLATE (SPECIAL HIGH DEMAND MODULE) ---
+        function getScienceFormulaHTML(theme, cardBg, promptText) {
+            return `
+    <header class="border-b ${cardBg} sticky top-0 z-30 backdrop-blur py-4">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl ${theme.bg} text-white flex items-center justify-center font-bold text-lg shadow">
+                    <i class="fa-solid fa-flask"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-none">Class 10 Science Formula & Equations Sheet</h1>
+                    <span class="text-xs text-slate-400">Bihar Board / CBSE Quick Revision Tool</span>
+                </div>
+            </div>
+            <!-- Search Bar -->
+            <div class="w-full sm:w-72 relative">
+                <input type="text" id="searchInput" onkeyup="filterFormulas()" placeholder="Search formula (Ohm, Lens, Mirror)..." class="w-full bg-slate-800/80 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-indigo-500">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-8 flex-1 space-y-10 fade-in">
+        
+        <!-- Quick Interactive Ohm's Law Calculator Widget -->
+        <section class="${cardBg} p-6 rounded-2xl border shadow-xl space-y-4">
+            <h2 class="text-lg font-bold flex items-center space-x-2">
+                <i class="fa-solid fa-calculator ${theme.text}"></i>
+                <span>Interactive Calculator: Ohm's Law (V = I × R)</span>
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Voltage V (Volts)</label>
+                    <input type="number" id="calcV" placeholder="Auto calculated if empty" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-lg focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Current I (Amperes)</label>
+                    <input type="number" id="calcI" placeholder="e.g. 2" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-lg focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Resistance R (Ohms Ω)</label>
+                    <input type="number" id="calcR" placeholder="e.g. 5" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-lg focus:outline-none">
+                </div>
+            </div>
+            <div class="flex justify-between items-center pt-2">
+                <button onclick="computeOhm()" class="px-5 py-2 ${theme.bg} text-white font-semibold text-xs rounded-lg shadow">Calculate</button>
+                <div id="ohmResult" class="text-xs font-mono font-bold text-emerald-400">Result: Enter values to compute</div>
+            </div>
+        </section>
+
+        <!-- Physics Formulas -->
+        <section class="space-y-4 formula-group">
+            <h2 class="text-xl font-bold flex items-center space-x-2">
+                <i class="fa-solid fa-bolt ${theme.text}"></i>
+                <span>Physics Important Formulas (भौतिक विज्ञान)</span>
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="${cardBg} p-5 rounded-2xl border space-y-2 formula-card">
+                    <div class="flex justify-between items-start">
+                        <h3 class="font-bold text-sm">Mirror Formula (दर्पण सूत्र)</h3>
+                        <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">Light / प्रकाश</span>
+                    </div>
+                    <div class="p-3 bg-slate-950 rounded-xl font-mono text-center text-sm font-bold ${theme.text}">1/f = 1/v + 1/u</div>
+                    <p class="text-xs text-slate-400">f = Focal length, v = Image distance, u = Object distance</p>
+                </div>
+
+                <div class="${cardBg} p-5 rounded-2xl border space-y-2 formula-card">
+                    <div class="flex justify-between items-start">
+                        <h3 class="font-bold text-sm">Ohm's Law (ओम का नियम)</h3>
+                        <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">Electricity / विद्युत</span>
+                    </div>
+                    <div class="p-3 bg-slate-950 rounded-xl font-mono text-center text-sm font-bold ${theme.text}">V = I × R</div>
+                    <p class="text-xs text-slate-400">V = Voltage, I = Current (A), R = Resistance (Ω)</p>
+                </div>
+
+                <div class="${cardBg} p-5 rounded-2xl border space-y-2 formula-card">
+                    <div class="flex justify-between items-start">
+                        <h3 class="font-bold text-sm">Electric Power (विद्युत शक्ति)</h3>
+                        <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">Electricity / विद्युत</span>
+                    </div>
+                    <div class="p-3 bg-slate-950 rounded-xl font-mono text-center text-sm font-bold ${theme.text}">P = V × I = I²R = V²/R</div>
+                    <p class="text-xs text-slate-400">P = Power in Watts (W)</p>
+                </div>
+
+                <div class="${cardBg} p-5 rounded-2xl border space-y-2 formula-card">
+                    <div class="flex justify-between items-start">
+                        <h3 class="font-bold text-sm">Lens Formula (लेंस सूत्र)</h3>
+                        <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">Light / प्रकाश</span>
+                    </div>
+                    <div class="p-3 bg-slate-950 rounded-xl font-mono text-center text-sm font-bold ${theme.text}">1/f = 1/v - 1/u</div>
+                    <p class="text-xs text-slate-400">Power of lens P = 1 / f (in meters), Unit: Dioptre (D)</p>
+                </div>
+            </div>
+        </section>
+
+        ${extraSections(theme, cardBg)}
+        <!-- Chemistry Equations -->
+        <section class="space-y-4 formula-group">
+            <h2 class="text-xl font-bold flex items-center space-x-2">
+                <i class="fa-solid fa-atom ${theme.text}"></i>
+                <span>Chemistry Key Compounds & Equations (रसायन विज्ञान)</span>
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="${cardBg} p-5 rounded-2xl border space-y-2 formula-card">
+                    <h3 class="font-bold text-sm">Baking Soda & Washing Soda</h3>
+                    <div class="p-2.5 bg-slate-950 rounded-xl font-mono text-xs text-emerald-400">
+                        Baking Soda: NaHCO₃ <br>
+                        Washing Soda: Na₂CO₃·10H₂O
+                    </div>
+                </div>
+                <div class="${cardBg} p-5 rounded-2xl border space-y-2 formula-card">
+                    <h3 class="font-bold text-sm">Plaster of Paris & Gypsum</h3>
+                    <div class="p-2.5 bg-slate-950 rounded-xl font-mono text-xs text-emerald-400">
+                        Gypsum: CaSO₄·2H₂O <br>
+                        Plaster of Paris: CaSO₄·½H₂O
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function filterFormulas() {
+            let q = document.getElementById('searchInput').value.toLowerCase();
+            let cards = document.querySelectorAll('.formula-card');
+            cards.forEach(c => {
+                let txt = c.innerText.toLowerCase();
+                c.style.display = txt.includes(q) ? 'block' : 'none';
+            });
+        }
+
+        function computeOhm() {
+            let v = parseFloat(document.getElementById('calcV').value);
+            let i = parseFloat(document.getElementById('calcI').value);
+            let r = parseFloat(document.getElementById('calcR').value);
+            let res = document.getElementById('ohmResult');
+
+            if (!isNaN(i) && !isNaN(r)) {
+                let ans = (i * r).toFixed(2);
+                res.innerText = "Calculated Voltage V = " + ans + " Volts";
+            } else if (!isNaN(v) && !isNaN(r) && r !== 0) {
+                let ans = (v / r).toFixed(2);
+                res.innerText = "Calculated Current I = " + ans + " Amperes";
+            } else if (!isNaN(v) && !isNaN(i) && i !== 0) {
+                let ans = (v / i).toFixed(2);
+                res.innerText = "Calculated Resistance R = " + ans + " Ohms";
+            } else {
+                res.innerText = "Please fill at least 2 fields correctly";
+            }
+        }
+    <\/script>`;
+        }
+
+        function extraSections(theme, cardBg) {
+            const card = (t, tag, f, n) => `<div class="${cardBg} p-5 rounded-2xl border space-y-2 formula-card"><div class="flex justify-between items-start"><h3 class="font-bold text-sm">${t}</h3><span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">${tag}</span></div><div class="p-3 bg-slate-950 rounded-xl font-mono text-center text-sm font-bold ${theme.text}">${f}</div><p class="text-xs text-slate-400">${n}</p></div>`;
+            const L = [
+                ["Snell's Law (अपवर्तनांक)", 'Light / प्रकाश', 'n = sin i / sin r = c / v', 'n = refractive index, c = speed of light in vacuum, v = speed in medium'],
+                ['Magnification (आवर्धन)', 'Light / प्रकाश', 'Mirror: m = h′/h = −v/u | Lens: m = h′/h = v/u', 'h′ = image height, h = object height'],
+                ['Resistance & Resistivity', 'Electricity / विद्युत', 'R = ρ × l / A', 'ρ = resistivity, l = length, A = cross-section area'],
+                ['Series Combination', 'Electricity / विद्युत', 'R = R₁ + R₂ + R₃', 'Same current flows through every resistor'],
+                ['Parallel Combination', 'Electricity / विद्युत', '1/R = 1/R₁ + 1/R₂ + 1/R₃', 'Same potential difference across every resistor'],
+                ['Heating Effect (जूल का नियम)', 'Electricity / विद्युत', 'H = I² R t', 'H = heat in Joules, t = time in seconds'],
+                ['Electric Energy', 'Electricity / विद्युत', 'E = P × t', '1 kWh = 3.6 × 10⁶ J'],
+                ['pH Scale', 'Acids & Bases', 'pH = −log₁₀[H⁺]', 'pH < 7 acidic, = 7 neutral, > 7 basic'],
+                ['Neutralisation', 'Acids & Bases', 'Acid + Base → Salt + Water', 'e.g. HCl + NaOH → NaCl + H₂O'],
+                ['Bleaching Powder', 'Salts', 'CaOCl₂', 'Made by passing Cl₂ over dry slaked lime Ca(OH)₂'],
+                ['Thermal Decomposition', 'Chemical Reactions', 'CaCO₃ → CaO + CO₂', 'Limestone on heating gives quicklime and carbon dioxide']
+            ].map(a => card(a[0], a[1], a[2], a[3])).join('');
+            return `<section class="space-y-4 formula-group"><h2 class="text-xl font-bold flex items-center space-x-2"><i class="fa-solid fa-book ${theme.text}"></i><span>More Physics & Chemistry Formulas</span></h2><div class="grid grid-cols-1 md:grid-cols-2 gap-4">${L}</div></section>`;
+        }
+
+        // Additional modules
+        function getPortfolioHTML(theme, cardBg) {
+            return `
+    <main class="max-w-5xl mx-auto px-4 py-12 flex-1 space-y-12 fade-in">
+        <section class="text-center space-y-4">
+            <div class="w-24 h-24 mx-auto rounded-full ${theme.bg} p-1 shadow-lg">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300" class="w-full h-full rounded-full object-cover">
+            </div>
+            <h1 class="text-3xl font-extrabold">Full-Stack Architect</h1>
+            <p class="text-sm text-slate-400 max-w-md mx-auto">Building responsive web apps with JavaScript, Tailwind CSS, and resilient architecture.</p>
+        </section>
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="${cardBg} p-5 rounded-2xl border space-y-2">
+                <h3 class="font-bold text-sm">Interactive Skill Set</h3>
+                <div class="space-y-2 text-xs">
+                    <div>
+                        <div class="flex justify-between mb-1"><span>JavaScript / Web APIs</span><span>95%</span></div>
+                        <div class="w-full bg-slate-800 rounded-full h-2"><div class="${theme.bg} h-2 rounded-full" style="width: 95%"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1"><span>Tailwind CSS</span><span>90%</span></div>
+                        <div class="w-full bg-slate-800 rounded-full h-2"><div class="${theme.bg} h-2 rounded-full" style="width: 90%"></div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="${cardBg} p-5 rounded-2xl border space-y-2">
+                <h3 class="font-bold text-sm">Contact Me</h3>
+                <form onsubmit="event.preventDefault(); alert('Message sent successfully!');" class="space-y-2 text-xs">
+                    <input type="text" placeholder="Your Name" required class="w-full bg-slate-800 border border-slate-700 p-2 rounded-lg">
+                    <input type="email" placeholder="Your Email" required class="w-full bg-slate-800 border border-slate-700 p-2 rounded-lg">
+                    <button type="submit" class="w-full py-2 ${theme.bg} text-white font-semibold rounded-lg">Send</button>
+                </form>
+            </div>
+        </section>
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold">Projects</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="${cardBg} p-4 rounded-2xl border space-y-2"><i class="fa-solid fa-chart-line ${theme.text}"></i><h3 class="font-bold text-sm">Analytics Dashboard</h3><p class="text-xs text-slate-400">Real-time charts with filters.</p><span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300">JavaScript</span></div>
+                <div class="${cardBg} p-4 rounded-2xl border space-y-2"><i class="fa-solid fa-cart-shopping ${theme.text}"></i><h3 class="font-bold text-sm">Shop Frontend</h3><p class="text-xs text-slate-400">Cart, search and checkout flow.</p><span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300">Tailwind</span></div>
+                <div class="${cardBg} p-4 rounded-2xl border space-y-2"><i class="fa-solid fa-comments ${theme.text}"></i><h3 class="font-bold text-sm">Chat App</h3><p class="text-xs text-slate-400">Live messaging UI.</p><span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300">Node.js</span></div>
+            </div>
+        </section>
+    </main>`;
+        }
+
+        function getCalculatorHTML(theme, cardBg) {
+            return `
+    <main class="flex-1 flex items-center justify-center p-4">
+        <div class="w-full max-w-sm ${cardBg} p-6 rounded-2xl border shadow-2xl space-y-4">
+            <div class="flex justify-between items-center text-xs font-bold text-slate-400">
+                <span>SCIENTIFIC CALCULATOR</span>
+                <i class="fa-solid fa-calculator ${theme.text}"></i>
+            </div>
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-right">
+                <div id="calcSub" class="text-xs text-slate-500 h-4">0</div>
+                <div id="calcMain" class="text-3xl font-mono font-bold truncate">0</div>
+            </div>
+            <div class="grid grid-cols-4 gap-2 font-mono text-xs">
+                <button onclick="calcClear()" class="p-3 rounded-lg bg-rose-600/20 text-rose-400 font-bold">C</button>
+                <button onclick="calcOp('/')" class="p-3 rounded-lg bg-slate-800 text-indigo-400 font-bold">÷</button>
+                <button onclick="calcOp('*')" class="p-3 rounded-lg bg-slate-800 text-indigo-400 font-bold">×</button>
+                <button onclick="calcBackspace()" class="p-3 rounded-lg bg-slate-800 text-slate-300"><i class="fa-solid fa-backspace"></i></button>
+                <button onclick="calcNum('7')" class="p-3 rounded-lg bg-slate-800">7</button>
+                <button onclick="calcNum('8')" class="p-3 rounded-lg bg-slate-800">8</button>
+                <button onclick="calcNum('9')" class="p-3 rounded-lg bg-slate-800">9</button>
+                <button onclick="calcOp('-')" class="p-3 rounded-lg bg-slate-800 text-indigo-400 font-bold">-</button>
+                <button onclick="calcNum('4')" class="p-3 rounded-lg bg-slate-800">4</button>
+                <button onclick="calcNum('5')" class="p-3 rounded-lg bg-slate-800">5</button>
+                <button onclick="calcNum('6')" class="p-3 rounded-lg bg-slate-800">6</button>
+                <button onclick="calcOp('+')" class="p-3 rounded-lg bg-slate-800 text-indigo-400 font-bold">+</button>
+                <button onclick="calcNum('1')" class="p-3 rounded-lg bg-slate-800">1</button>
+                <button onclick="calcNum('2')" class="p-3 rounded-lg bg-slate-800">2</button>
+                <button onclick="calcNum('3')" class="p-3 rounded-lg bg-slate-800">3</button>
+                <button onclick="calcEquals()" class="row-span-2 p-3 rounded-lg ${theme.bg} text-white font-bold text-base shadow">=</button>
+                <button onclick="calcNum('0')" class="col-span-2 p-3 rounded-lg bg-slate-800">0</button>
+                <button onclick="calcNum('.')" class="p-3 rounded-lg bg-slate-800">.</button>
+                <button onclick="calcFn(Math.sqrt)" class="p-3 rounded-lg bg-slate-800 text-indigo-400">√</button>
+                <button onclick="calcFn(x=>x*x)" class="p-3 rounded-lg bg-slate-800 text-indigo-400">x²</button>
+                <button onclick="calcFn(x=>x/100)" class="p-3 rounded-lg bg-slate-800 text-indigo-400">%</button>
+                <button onclick="calcFn(x=>-x)" class="p-3 rounded-lg bg-slate-800 text-indigo-400">±</button>
+                <div class="col-span-4 border-t border-slate-800 pt-3 space-y-1 font-sans"><div class="text-[11px] text-slate-400 font-bold">HISTORY</div><div id="calcHist" class="text-[11px] text-slate-400 font-mono">No calculations yet</div></div>
+                <div class="col-span-4 border-t border-slate-800 pt-3 space-y-2 font-sans"><div class="text-[11px] text-slate-400 font-bold">EMI CALCULATOR</div><div class="grid grid-cols-3 gap-2"><input id="emiP" type="number" placeholder="Loan ₹" class="bg-slate-800 border border-slate-700 rounded-lg p-2 text-[11px] w-full"><input id="emiR" type="number" placeholder="Rate % p.a." class="bg-slate-800 border border-slate-700 rounded-lg p-2 text-[11px] w-full"><input id="emiY" type="number" placeholder="Years" class="bg-slate-800 border border-slate-700 rounded-lg p-2 text-[11px] w-full"></div><button onclick="calcEMI()" class="w-full py-2 ${theme.bg} text-white font-semibold rounded-lg">Calculate EMI</button><div id="emiOut" class="text-[11px] font-bold text-emerald-400"></div></div>
+            </div>
+        </div>
+    </main>
+    <script>
+        let expr = '', cur = '0', fresh = false, hist = [];
+        function updateDisp() { document.getElementById('calcMain').innerText = cur; document.getElementById('calcSub').innerText = expr || '0'; }
+        function fmt(x) { return isFinite(x) ? String(+Number(x).toFixed(10)) : 'Error'; }
+        function calcNum(n) { if (fresh) { cur = '0'; fresh = false; } if (n === '.' && cur.includes('.')) return; cur = (cur === '0' && n !== '.') ? n : cur + n; updateDisp(); }
+        function calcOp(op) { fresh = false; if (cur === 'Error') cur = '0'; expr += cur + ' ' + op + ' '; cur = '0'; updateDisp(); }
+        function calcClear() { cur = '0'; expr = ''; fresh = false; updateDisp(); }
+        function calcBackspace() { cur = (cur.length > 1 && cur !== 'Error') ? cur.slice(0, -1) : '0'; updateDisp(); }
+        function calcFn(f) { cur = fmt(f(parseFloat(cur))); fresh = true; updateDisp(); }
+        function calcEquals() {
+            try {
+                const full = expr + cur;
+                const out = fmt(Function('"use strict";return (' + full + ')')());
+                if (out !== 'Error') { hist.unshift(full.split('*').join('×').split('/').join('÷') + ' = ' + out); hist = hist.slice(0, 5); document.getElementById('calcHist').innerHTML = hist.join('<br>'); }
+                expr = ''; cur = out; fresh = true;
+            } catch (e) { cur = 'Error'; expr = ''; fresh = true; }
+            updateDisp();
+        }
+        function calcEMI() {
+            const P = +document.getElementById('emiP').value, r = +document.getElementById('emiR').value / 1200, n = +document.getElementById('emiY').value * 12;
+            const o = document.getElementById('emiOut');
+            if (!(P > 0 && n > 0 && r >= 0)) { o.innerText = 'Valid values daalo'; return; }
+            const e = r ? P * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1) : P / n;
+            o.innerText = 'EMI: ₹' + e.toFixed(2) + ' / month | Total: ₹' + (e * n).toFixed(0);
+        }
+    <\/script>`;
+        }
+
+        function getQuizHTML(theme, cardBg) {
+            return `
+    <main class="flex-1 max-w-xl w-full mx-auto p-4 flex items-center justify-center">
+        <div id="quizBox" class="${cardBg} p-6 sm:p-8 rounded-2xl border shadow-xl w-full space-y-6">
+            <div class="flex justify-between items-center text-xs font-semibold">
+                <span class="${theme.text} uppercase">General Science Quiz</span>
+                <span id="quizProgress" class="text-slate-400">Q 1/5</span>
+            </div>
+            <h2 id="quizQuestion" class="text-lg font-bold">What is the SI unit of Electric Resistance?</h2>
+            <div id="quizOptions" class="space-y-2"></div>
+            <div id="quizFooter" class="hidden pt-3 border-t border-slate-800 flex justify-between items-center text-xs">
+                <span id="quizFeedback" class="font-bold"></span>
+                <button onclick="nextQuestion()" class="px-4 py-2 ${theme.bg} text-white font-semibold rounded-lg">Next</button>
+            </div>
+        </div>
+    </main>
+    <script>
+        const questions = [
+            { q: "What is the SI unit of Electric Resistance?", options: ["Ampere", "Ohm", "Volt"], answer: 1, e: "R = V/I, measured in Ohm (Ω)." },
+            { q: "Which chemical formula represents Washing Soda?", options: ["NaHCO₃", "Na₂CO₃·10H₂O", "CaSO₄"], answer: 1, e: "NaHCO₃ is baking soda." },
+            { q: "Focal length of a plane mirror is:", options: ["Zero", "Infinite", "25 cm"], answer: 1, e: "Parallel rays never converge after reflection." },
+            { q: "pH of a neutral solution is:", options: ["0", "7", "14"], answer: 1, e: "Below 7 acidic, above 7 basic." },
+            { q: "Power of a lens of focal length 50 cm is:", options: ["+2 D", "+0.5 D", "+50 D"], answer: 0, e: "P = 1/f = 1/0.5 m = +2 D." }
+        ];
+        let qIdx = 0, score = 0, done = false;
+        function best() { try { return +localStorage.getItem('sci_hs') || 0; } catch (x) { return 0; } }
+        function renderQuestion() {
+            done = false;
+            const item = questions[qIdx];
+            document.getElementById('quizProgress').innerText = "Q " + (qIdx + 1) + "/" + questions.length;
+            document.getElementById('quizQuestion').innerText = item.q;
+            document.getElementById('quizFooter').classList.add('hidden');
+            document.getElementById('quizOptions').innerHTML = item.options.map((o, i) => '<button onclick="checkAns(' + i + ')" class="w-full text-left p-3 rounded-xl border border-slate-700 bg-slate-800 text-xs hover:bg-slate-700 transition">' + o + '</button>').join('');
+        }
+        function checkAns(i) {
+            if (done) return;
+            done = true;
+            const a = questions[qIdx].answer;
+            if (i === a) score++;
+            document.querySelectorAll('#quizOptions button').forEach((b, k) => {
+                b.disabled = true;
+                if (k === a) b.classList.add('border-emerald-500', 'text-emerald-400');
+                else if (k === i) b.classList.add('border-rose-500', 'text-rose-400');
+            });
+            document.getElementById('quizFeedback').innerHTML = (i === a ? '<span class="text-emerald-400">Correct!</span> ' : '<span class="text-rose-400">Incorrect.</span> ') + '<span class="text-slate-400 font-normal">' + questions[qIdx].e + '</span>';
+            document.getElementById('quizFooter').classList.remove('hidden');
+        }
+        function nextQuestion() {
+            qIdx++;
+            if (qIdx < questions.length) { renderQuestion(); return; }
+            let hs = best();
+            if (score > hs) { hs = score; try { localStorage.setItem('sci_hs', hs); } catch (x) {} }
+            document.getElementById('quizBox').innerHTML = '<div class="text-center py-6 space-y-3"><h2 class="text-xl font-bold">Quiz Complete!</h2><p class="text-sm">Score: <strong class="${theme.text}">' + score + '/' + questions.length + '</strong></p><p class="text-xs text-slate-400">Best: ' + hs + '</p><button onclick="location.reload()" class="px-5 py-2 ${theme.bg} text-white text-xs font-semibold rounded-lg">Restart</button></div>';
+        }
+        renderQuestion();
+    <\/script>`;
+        }
+
+        function getTodoHTML(theme, cardBg) {
+            return `
+    <main class="flex-1 max-w-xl w-full mx-auto p-4 py-8 fade-in">
+        <div class="${cardBg} p-6 rounded-2xl border shadow-xl space-y-4">
+            <h1 class="text-lg font-bold flex items-center space-x-2"><i class="fa-solid fa-list-check ${theme.text}"></i><span>Task Manager</span></h1>
+            <form onsubmit="addTask(event)" class="flex space-x-2">
+                <input type="text" id="todoInput" required placeholder="Add task..." class="flex-1 min-w-0 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none">
+                <select id="todoTag" class="bg-slate-800 border border-slate-700 rounded-xl px-2 text-xs"><option>Study</option><option>Work</option><option>Personal</option></select>
+                <button type="submit" class="px-4 py-2 ${theme.bg} text-white text-xs font-semibold rounded-xl">Add</button>
+            </form>
+            <div class="flex gap-2 text-xs" id="todoFilters"></div>
+            <ul id="todoList" class="space-y-2"></ul>
+            <p id="todoCount" class="text-[11px] text-slate-400"></p>
+        </div>
+    </main>
+    <script>
+        const K = 'todo_tasks'; let filter = 'all';
+        let tasks = [{ t: "Revise Physics Formula", d: false, g: "Study" }, { t: "Practice Quiz", d: true, g: "Study" }];
+        try { const s = JSON.parse(localStorage.getItem(K)); if (Array.isArray(s)) tasks = s; } catch (e) {}
+        function save() { try { localStorage.setItem(K, JSON.stringify(tasks)); } catch (e) {} }
+        function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+        function setF(f) { filter = f; render(); }
+        function render() {
+            document.getElementById('todoFilters').innerHTML = ['all', 'active', 'done'].map(f => '<button data-f="' + f + '" onclick="setF(this.dataset.f)" class="px-3 py-1 rounded-lg border border-slate-700 ' + (f === filter ? '${theme.bg} text-white' : 'bg-slate-800') + '">' + f + '</button>').join('');
+            const list = tasks.map((t, i) => ({ t, i })).filter(o => filter === 'all' || (filter === 'done') === o.t.d);
+            document.getElementById('todoList').innerHTML = list.map(o => '<li class="flex items-center justify-between p-2.5 rounded-xl bg-slate-800 text-xs border border-slate-700"><span data-i="' + o.i + '" onclick="toggle(+this.dataset.i)" class="cursor-pointer flex-1 ' + (o.t.d ? 'line-through text-slate-500' : '') + '">' + esc(o.t.t) + ' <em class="not-italic text-[10px] px-1.5 py-0.5 rounded bg-slate-950 text-slate-400 ml-1">' + esc(o.t.g || '') + '</em></span><button data-i="' + o.i + '" onclick="del(+this.dataset.i)" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash"></i></button></li>').join('');
+            document.getElementById('todoCount').innerText = tasks.filter(t => !t.d).length + ' pending / ' + tasks.length + ' total';
+        }
+        function addTask(e) { e.preventDefault(); const inp = document.getElementById('todoInput'); tasks.push({ t: inp.value, d: false, g: document.getElementById('todoTag').value }); inp.value = ''; save(); render(); }
+        function toggle(i) { tasks[i].d = !tasks[i].d; save(); render(); }
+        function del(i) { tasks.splice(i, 1); save(); render(); }
+        render();
+    <\/script>`;
+        }
+
+        function getEcommerceHTML(theme, cardBg) {
+            return `
+    <main class="max-w-5xl mx-auto px-4 py-8 flex-1 space-y-6 w-full fade-in">
+        <div class="p-6 rounded-2xl ${theme.bg} text-white flex justify-between items-center shadow-xl">
+            <div><h1 class="text-2xl font-extrabold">Gadget Store</h1><p class="text-xs opacity-90">Get up to 40% discount on tech</p></div>
+            <button onclick="toggleCart(true)" class="text-xs font-bold bg-white text-slate-900 px-3 py-1.5 rounded-lg">Cart (<span id="cCount">0</span>)</button>
+        </div>
+        <input id="shopSearch" oninput="renderP()" placeholder="Search products..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none">
+        <div id="prodGrid" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
+    </main>
+    <aside id="cartDrawer" class="fixed top-0 right-0 h-full w-72 max-w-full ${cardBg} backdrop-blur-md border-l p-4 space-y-3 transform translate-x-full transition-transform duration-300 z-50 overflow-y-auto">
+        <div class="flex justify-between items-center"><h2 class="font-bold text-sm">Order Summary</h2><button onclick="toggleCart(false)" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div>
+        <ul id="cartList" class="space-y-2 text-xs"></ul>
+        <div class="border-t border-slate-700 pt-3 text-xs space-y-1"><div class="flex justify-between"><span>Subtotal</span><span id="cSub">$0</span></div><div class="flex justify-between"><span>Tax (10%)</span><span id="cTax">$0</span></div><div class="flex justify-between font-bold text-sm"><span>Total</span><span id="cTot">$0</span></div></div>
+        <button onclick="alert('Order placed!')" class="w-full py-2 ${theme.bg} text-white text-xs font-semibold rounded-lg">Place Order</button>
+    </aside>
+    <script>
+        const P = [{ n: 'Acoustic Pro Headphone', p: 199, i: 'headphones' }, { n: 'Smart Fitness Band', p: 99, i: 'stopwatch' }, { n: 'Mechanical Keyboard', p: 129, i: 'keyboard' }, { n: 'Portable Speaker', p: 79, i: 'volume-high' }, { n: 'Wireless Mouse', p: 39, i: 'computer-mouse' }, { n: 'Power Bank 20K', p: 49, i: 'battery-full' }];
+        let cart = {};
+        function renderP() {
+            const q = document.getElementById('shopSearch').value.toLowerCase();
+            document.getElementById('prodGrid').innerHTML = P.map((x, k) => ({ x, k })).filter(o => o.x.n.toLowerCase().includes(q)).map(o => '<div class="${cardBg} p-4 rounded-xl border space-y-2"><div class="h-32 bg-slate-800 rounded-lg flex items-center justify-center text-2xl ${theme.text}"><i class="fa-solid fa-' + o.x.i + '"></i></div><h3 class="font-bold text-xs">' + o.x.n + '</h3><div class="flex justify-between items-center text-xs font-bold"><span class="${theme.text}">$' + o.x.p + '</span><button data-k="' + o.k + '" onclick="addC(+this.dataset.k)" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded">Add</button></div></div>').join('');
+        }
+        function addC(k) { cart[k] = (cart[k] || 0) + 1; renderC(); }
+        function chg(k, d) { cart[k] = (cart[k] || 0) + d; if (cart[k] <= 0) delete cart[k]; renderC(); }
+        function renderC() {
+            let n = 0, s = 0;
+            const ks = Object.keys(cart);
+            const html = ks.length ? ks.map(k => { const x = P[k], c = cart[k]; n += c; s += c * x.p; return '<li class="flex justify-between items-center"><span>' + x.n + ' &times; ' + c + '</span><span><button data-k="' + k + '" onclick="chg(+this.dataset.k,-1)" class="px-2">-</button><button data-k="' + k + '" onclick="chg(+this.dataset.k,1)" class="px-2">+</button>$' + (c * x.p) + '</span></li>'; }).join('') : '<li class="text-slate-400">Cart empty</li>';
+            document.getElementById('cartList').innerHTML = html;
+            document.getElementById('cCount').innerText = n;
+            document.getElementById('cSub').innerText = '$' + s;
+            document.getElementById('cTax').innerText = '$' + (s * 0.1).toFixed(2);
+            document.getElementById('cTot').innerText = '$' + (s * 1.1).toFixed(2);
+        }
+        function toggleCart(o) { document.getElementById('cartDrawer').classList.toggle('translate-x-full', !o); }
+        renderP(); renderC();
+    <\/script>`;
+        }
+
+        function getSaasLandingHTML(promptText, theme, cardBg) {
+            const cards = [['fa-bolt', 'Fast', 'Loads instantly, no server needed.'], ['fa-mobile-screen-button', 'Responsive', 'Looks good on phone, tablet and desktop.'], ['fa-shield-halved', 'Reliable', 'Single-file page that works offline.']]
+                .map(c => `<div class="${cardBg} p-5 rounded-2xl border space-y-2"><i class="fa-solid ${c[0]} ${theme.text} text-xl"></i><h3 class="font-bold text-sm">${c[1]}</h3><p class="text-xs text-slate-400">${c[2]}</p></div>`).join('');
+            return `
+    <main class="max-w-5xl mx-auto px-4 py-12 flex-1 space-y-12 fade-in">
+        <section class="text-center space-y-4 max-w-2xl mx-auto">
+            <span class="text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full ${theme.bg} text-white">Starter Page</span>
+            <h1 class="text-3xl sm:text-5xl font-extrabold leading-tight">${esc(promptText)}</h1>
+            <p class="text-xs sm:text-sm text-slate-400">Is prompt ke liye koi ready template match nahi hua, isliye ye starter page bana hai. Keywords jaise quiz, calculator, todo, store, portfolio, formula try karo.</p>
+            <button onclick="alert('Primary CTA Clicked')" class="px-6 py-3 ${theme.bg} text-white text-xs font-semibold rounded-xl shadow">Get Started</button>
+        </section>
+        <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">${cards}</section>
+    </main>`;
+        }
+
+        function copyGeneratedCode() {
+            if (!currentGeneratedHTML) return;
+            const textArea = document.createElement("textarea");
+            textArea.value = currentGeneratedHTML;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                if (document.execCommand('copy')) showToast("Code copied to clipboard!", "fa-copy"); else showToast("Failed to copy code.", "fa-triangle-exclamation");
+            } catch (err) {
+                showToast("Failed to copy code.", "fa-triangle-exclamation");
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function downloadHTML() {
+            if (!currentGeneratedHTML) return;
+            const blob = new Blob([currentGeneratedHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'generated_website.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("Downloaded generated_website.html", "fa-download");
+        }
+
+        function showToast(message, iconClass = "fa-circle-check") {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.innerText = message;
+            toastIcon.className = `fa-solid ${iconClass} text-emerald-400 text-lg`;
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
